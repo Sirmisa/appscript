@@ -7,3 +7,4 @@ let texto = "Hola mundo con espacios";
 let resultado = eliminarEspacios(texto);
 console.log(resultado); // "Holamundoconespacios"
 gygyugu
+sfsd
