@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .hidden {
+            display: none;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .tags-container {
+            border: 1px solid #ddd;
+            min-height: 100px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .tag {
+            display: inline-block;
+            background-color: #e9ecef;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+        }
+        .tag .remove {
+            margin-left: 5px;
+            cursor: pointer;
+            color: #666;
+        }
+        .save-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-group">
+            <label>Building Block *</label>
+            <select id="buildingBlock" onchange="handleBuildingBlockChange()">
+                <option value="">SELECCIONE</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Actividad *</label>
+            <select id="activity" onchange="handleActivityChange()" class="hidden">
+                <option value="">SELECCIONE</option>
+            </select>
+        </div>
+
+        <div class="form-group hidden" id="ambienteGroup">
+            <label>Ambiente *</label>
+            <select id="ambiente" onchange="updateAvailableTags()">
+                <option value="">SELECCIONE</option>
+            </select>
+        </div>
+
+        <div class="form-group hidden" id="servicioGroup">
+            <label>Servicio *</label>
+            <select id="servicio" onchange="updateAvailableTags()">
+                <option value="">SELECCIONE</option>
+            </select>
+        </div>
+
+        <div class="form-group hidden" id="plataformaGroup">
+            <label>Plataforma *</label>
+            <select id="plataforma" onchange="updateAvailableTags()">
+                <option value="">SELECCIONE</option>
+            </select>
+        </div>
+
+        <div class="tags-container" id="tagsContainer"></div>
+        
+        <button class="save-btn" onclick="saveTags()">Guardar etiquetas</button>
+    </div>
+
+    <script>
+        // Initialize form
+        function initForm() {
+            google.script.run
+                .withSuccessHandler(loadBuildingBlocks)
+                .getBuildingBlocks();
+        }
+
+        function loadBuildingBlocks(blocks) {
+            const select = document.getElementById('buildingBlock');
+            blocks.forEach(block => {
+                const option = document.createElement('option');
+                option.value = block.toLowerCase();
+                option.text = block;
+                select.appendChild(option);
+            });
+        }
+
+        function handleBuildingBlockChange() {
+            const buildingBlock = document.getElementById('buildingBlock').value;
+            resetForm();
+            if (!buildingBlock) return;
+            
+            google.script.run
+                .withSuccessHandler(loadActivities)
+                .getActivitiesByBuildingBlock(buildingBlock);
+        }
+
+        function loadActivities(activities) {
+            const select = document.getElementById('activity');
+            select.innerHTML = '<option value="">SELECCIONE</option>';
+            activities.forEach(activity => {
+                const option = document.createElement('option');
+                option.value = activity;
+                option.text = activity;
+                select.appendChild(option);
+            });
+            select.classList.remove('hidden');
+        }
+
+        function handleActivityChange() {
+            const buildingBlock = document.getElementById('buildingBlock').value;
+            const activity = document.getElementById('activity').value;
+
+            resetActivityDependentSelects();
+            document.getElementById('tagsContainer').innerHTML = '';
+            if (!activity) {
+                return;
+            }
+
+            google.script.run
+                .withSuccessHandler(updateFormSections)
+                .getActivityConfig(buildingBlock, activity);
+        }
+
+        function updateFormSections(config) {
+            // Reset and show/hide sections based on configuration
+            document.getElementById('ambienteGroup').classList.toggle('hidden', !config.showAmbiente);
+            document.getElementById('servicioGroup').classList.toggle('hidden', !config.showServicio);
+            document.getElementById('plataformaGroup').classList.toggle('hidden', !config.showPlataforma);
+
+            // Load options for visible sections
+            if (config.showAmbiente) {
+                google.script.run
+                    .withSuccessHandler(loadAmbienteOptions)
+                    .getAmbienteOptions();
+            }
+            if (config.showServicio) {
+                google.script.run
+                    .withSuccessHandler(loadServicioOptions)
+                    .getServicioOptions();
+            }
+            if (config.showPlataforma) {
+                google.script.run
+                    .withSuccessHandler(loadPlataformaOptions)
+                    .getPlataformaOptions();
+            }
+
+            updateAvailableTags();
+        }
+
+        function loadAmbienteOptions(options) {
+            populateSelect('ambiente', options);
+        }
+
+        function loadServicioOptions(options) {
+            populateSelect('servicio', options);
+        }
+
+        function loadPlataformaOptions(options) {
+            populateSelect('plataforma', options);
+        }
+
+        function populateSelect(id, options) {
+            const select = document.getElementById(id);
+            select.innerHTML = '<option value="">SELECCIONE</option>';
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.value;
+                opt.text = option.text;
+                select.appendChild(opt);
+            });
+        }
+
+        function updateAvailableTags() {
+            const buildingBlock = document.getElementById('buildingBlock').value;
+            const activity = document.getElementById('activity').value;
+            const ambiente = document.getElementById('ambiente').value;
+            const servicio = document.getElementById('servicio').value;
+            const plataforma = document.getElementById('plataforma').value;
+
+            google.script.run
+                .withSuccessHandler(displayTags)
+                .getAvailableTags(buildingBlock, activity, ambiente, servicio, plataforma);
+        }
+
+        function displayTags(tags) {
+            const container = document.getElementById('tagsContainer');
+            container.innerHTML = '';
+            tags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag';
+                tagElement.textContent = tag;
+                container.appendChild(tagElement);
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('activity').classList.add('hidden');
+            resetDependentSelects();
+            document.getElementById('tagsContainer').innerHTML = '';
+        }
+
+        function resetDependentSelects() {
+            ['ambienteGroup', 'servicioGroup', 'plataformaGroup'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            ['activity', 'ambiente', 'servicio', 'plataforma'].forEach(id => {
+                document.getElementById(id).innerHTML = '<option value="">SELECCIONE</option>';
+            });
+        }
+
+        function resetActivityDependentSelects() {
+            // Hide the dependent groups
+            ['ambienteGroup', 'servicioGroup', 'plataformaGroup'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            
+            // Reset only the dependent select options
+            ['ambiente', 'servicio', 'plataforma'].forEach(id => {
+                document.getElementById(id).innerHTML = '<option value="">SELECCIONE</option>';
+            });
+        }
+
+        function saveTags() {
+            const tags = Array.from(document.getElementById('tagsContainer').children)
+                .map(tag => tag.textContent);
+            
+            google.script.run
+                .withSuccessHandler(() => alert('Tags saved successfully!'))
+                .withFailureHandler(error => alert('Error saving tags: ' + error))
+                .saveTags(tags);
+        }
+
+        // Initialize the form when the page loads
+        window.onload = initForm;
+    </script>
+</body>
+</html>
