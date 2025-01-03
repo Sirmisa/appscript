@@ -89,3 +89,31 @@ Los LSI se mantienen dentro de la partición de la tabla base. "El LSI se mantie
 ## Conclusión
 
 Elegir entre GSI y LSI depende en gran medida de las necesidades específicas de su aplicación. Mientras que los LSI pueden ser útiles para claves de ordenación alternativas dentro de la misma partición, vienen con limitaciones relacionadas con el tamaño, la creación y el rendimiento. Los GSI ofrecen mayor flexibilidad y escalabilidad, haciéndolos la opción más común para aplicaciones complejas. Comprender las ventajas y desventajas entre estos tipos de índices es crítico para diseñar soluciones DynamoDB eficientes y rentables.
+
+## Glosario de Términos Clave
+
+* **DynamoDB:** Un servicio de base de datos de documentos y clave-valor totalmente administrado y sin servidor ofrecido por Amazon Web Services.
+
+* **Primary Key (Clave Primaria):** El identificador único para un elemento en una tabla DynamoDB, que puede ser una clave de partición, o una combinación de una clave de partición y una clave de ordenación.
+
+* **Secondary Index (Índice Secundario):** Una estructura de datos que permite consultar una tabla DynamoDB utilizando atributos distintos de la clave primaria.
+
+* **Global Secondary Index (GSI):** Un tipo de índice secundario en DynamoDB que permite consultas flexibles con diferentes claves de partición y ordenación que la tabla base y se implementa como una tabla sombra con su propia capacidad de lectura/escritura.
+
+* **Local Secondary Index (LSI):** Un tipo de índice secundario en DynamoDB que utiliza la misma clave de partición que la tabla base, pero una clave de ordenación diferente, y se mantiene en la misma partición y consume el rendimiento de la tabla base.
+
+* **Partition Key (Clave de Partición):** El atributo de clave primaria utilizado para determinar en qué partición se almacena un elemento. Debe ser único dentro de una partición, pero no necesariamente único en toda la tabla.
+
+* **Sort Key (Clave de Ordenación):** Un atributo de clave primaria opcional que se utiliza junto con la clave de partición para organizar elementos dentro de la misma partición y proporcionar flexibilidad de consulta dentro de esa partición.
+
+* **Read Consistency (Consistencia de Lectura):** Se refiere a si una operación de lectura refleja la escritura más reciente. DynamoDB ofrece consistencia eventual (para GSIs) u opciones de consistencia fuerte (para LSIs).
+
+* **Eventual Consistency (Consistencia Eventual):** Un modelo de consistencia en el que los cambios de datos pueden tardar algún tiempo en propagarse a todas las ubicaciones de almacenamiento, lo que significa que una operación de lectura puede no reflejar siempre la escritura más reciente.
+
+* **Strong Consistency (Consistencia Fuerte):** Un modelo de consistencia en el que cualquier operación de lectura refleja la operación de escritura más reciente. Está garantizada para LSIs pero no para GSIs, a menos que se utilicen configuraciones específicas.
+
+* **Shadow Table (Tabla Sombra):** El mecanismo utilizado para GSIs, que representa la tabla completa y una tabla separada con su propia capacidad de rendimiento de lectura/escritura.
+
+* **Throughput (Rendimiento):** La medida de las operaciones de lectura y escritura que puede manejar una base de datos. La capacidad en DynamoDB se mide en unidades de capacidad de lectura (RCUs) y unidades de capacidad de escritura (WCUs).
+
+* **Item Collection (Colección de Elementos):** Un conjunto de elementos en una tabla DynamoDB que comparten el mismo valor de clave de partición.
